@@ -1,12 +1,18 @@
 import { useState } from "react";
+import { auth } from "../../config/firebase";
+import { CreateTask } from "../../api/task/post/task";
 
 const AddTask = ({ handleClose }) => {
   const [newTask, setNewTask] = useState({
-    nameTask: "",
-    categorie: "",
+    title: "",
+    category: "",
     description: "",
     isCompleted: false,
+    createdAt: new Date().getDate,
   });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   // Manejar cambios en los inputs
   const handleChange = (e) => {
@@ -17,28 +23,33 @@ const AddTask = ({ handleClose }) => {
     });
   };
 
-  // Guardar la tarea en localStorage
-  const handleSubmit = (e) => {
+  // Guardar la tarea en Firestore
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
 
-    if (!newTask.nameTask.trim()) {
-      alert("El nombre de la tarea es obligatorio");
-      return;
+    try {
+      const uid = auth.currentUser?.uid;
+      if (!uid) throw new Error("Usuario no autenticado");
+
+      const res = await CreateTask(uid, newTask);
+
+      if (!res.ok) throw new Error(res.error);
+
+      // Resetear form
+      setNewTask({
+        title: "",
+        categorie: "",
+        description: "",
+        isCompleted: false,
+      });
+      handleClose(false); // cerrar modal/form
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-
-    const storedTasks = JSON.parse(localStorage.getItem("dataList")) || [];
-    const updatedTasks = [...storedTasks, newTask];
-
-    localStorage.setItem("dataList", JSON.stringify(updatedTasks));
-
-    // Resetear form
-    setNewTask({
-      nameTask: "",
-      categorie: "",
-      description: "",
-      isCompleted: false,
-    });
-    handleClose(false); // cerrar modal/form
   };
 
   return (
@@ -53,6 +64,9 @@ const AddTask = ({ handleClose }) => {
     >
       <button onClick={() => handleClose(false)}>X</button>
       <h1>Nueva Tarea</h1>
+
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
       <form
         onSubmit={handleSubmit}
         style={{
@@ -65,8 +79,8 @@ const AddTask = ({ handleClose }) => {
       >
         <input
           style={{ width: "100%" }}
-          name="nameTask"
-          value={newTask.nameTask}
+          name="title"
+          value={newTask.title}
           onChange={handleChange}
           placeholder="Task Name"
         />
@@ -79,8 +93,8 @@ const AddTask = ({ handleClose }) => {
         />
         <input
           style={{ width: "100%" }}
-          name="categorie"
-          value={newTask.categorie}
+          name="category"
+          value={newTask.category}
           onChange={handleChange}
           placeholder="Categorie"
         />
@@ -101,7 +115,9 @@ const AddTask = ({ handleClose }) => {
           />
           <label>Is Completed?</label>
         </div>
-        <button type="submit">Guardar</button>
+        <button type="submit" disabled={loading}>
+          {loading ? "Guardando..." : "Guardar"}
+        </button>
       </form>
     </div>
   );

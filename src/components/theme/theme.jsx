@@ -1,10 +1,16 @@
-const ThemeList = ({ handleChangeTheme }) => {
+const ThemeList = ({ handleChangeTheme, categories }) => {
+  console.log("🚀 ~ ThemeList ~ categories:", categories);
+
   return (
     <div>
-      <button onClick={() => handleChangeTheme("All")}>All</button>
-      <button onClick={() => handleChangeTheme("Documentation")}>
-        Documentation
-      </button>
+      {categories &&
+        categories.map((cat, index) => {
+          return (
+            <button key={index} onClick={() => handleChangeTheme(cat)}>
+              {cat}
+            </button>
+          );
+        })}
     </div>
   );
 };
