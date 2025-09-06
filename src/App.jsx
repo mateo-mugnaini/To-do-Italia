@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 
-import ListComponent from "./components/list/list";
 import ThemeList from "./components/theme/theme";
 import AddTask from "./components/addTask/addTask";
 import "./index.css";
 import { auth } from "./config/firebase";
 import { GetCategories } from "./api/task/get/categories"; // 👈 asegurate que sea import nombrado
+import ListComponent from "./components/list/list";
 
 const App = () => {
   const [theme, setTheme] = useState("All");
