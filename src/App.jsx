@@ -11,45 +11,39 @@ import { GetCategories } from "./api/task/get/categories"; // 👈 asegurate que
 
 const App = () => {
   const [theme, setTheme] = useState("All");
-  const [categories, setCategories] = useState(["All"]); // 👈 guardamos categorías
+  const [categories, setCategories] = useState(["All"]);
   const [newTask, setNewTask] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        navigate("/auth");
-      } else {
-        const res = await GetCategories(user.uid);
-        if (res.ok) {
-          setCategories(["All", ...res.data]); // 👈 agrego "All" al inicio
-        }
-      }
-    });
+  const fetchCategories = async (uid) => {
+    const res = await GetCategories(uid);
+    if (res.ok) {
+      setCategories(["All", ...res.data]);
+    }
+  };
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) navigate("/auth");
+      else fetchCategories(user.uid);
+    });
     return () => unsubscribe();
   }, [navigate]);
 
-  const handleTask = (mode) => {
-    setNewTask(mode);
-  };
-
-  const handleChangeTheme = (theme) => {
-    setTheme(theme);
-  };
+  const handleTask = (mode) => setNewTask(mode);
+  const handleChangeTheme = (theme) => setTheme(theme);
 
   return (
     <div>
-      <div>
-        {/* 👇 le pasamos las categorías al ThemeList */}
-        <ThemeList
-          handleChangeTheme={handleChangeTheme}
-          categories={categories}
-        />
-      </div>
-      <div>
-        <ListComponent handleOpen={handleTask} theme={theme} />
-      </div>
+      <ThemeList
+        handleChangeTheme={handleChangeTheme}
+        categories={categories}
+      />
+      <ListComponent
+        handleOpen={handleTask}
+        theme={theme}
+        refreshCategories={fetchCategories} // 👈 pasamos la función
+      />
       {newTask && <AddTask handleClose={handleTask} />}
     </div>
   );

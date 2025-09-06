@@ -6,7 +6,7 @@ import EditTaskPopUp from "../editTask/editTask";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { GetTasksByCategories } from "../../api/task/get/tasksByCategorie";
 
-const ListComponent = ({ handleOpen, theme }) => {
+const ListComponent = ({ handleOpen, theme, refreshCategories }) => {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState(null);
@@ -51,7 +51,8 @@ const ListComponent = ({ handleOpen, theme }) => {
     if (!user) return;
     try {
       await DeleteTask(user.uid, taskId);
-      setTasks((prev) => prev.filter((t) => t.id !== taskId)); // 👈 eliminamos del estado
+      setTasks((prev) => prev.filter((t) => t.id !== taskId));
+      refreshCategories(user.uid); // 👈 actualizamos categorías
     } catch (err) {
       console.error("Error eliminando la tarea:", err.message);
     }
